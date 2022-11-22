@@ -123,17 +123,6 @@ function valadm($data){
 
 }
 
-
-//Write to console
-function console_write($data) {
-    $output = $data;
-    if (is_array($output))
-        $output = implode(',', $output);
-
-    echo "<script>console.log('Information from KGB: " . $output . "' );</script>";
-}
-//Write to console end
-
 //Дата сейчас
 function datenow(){
 date_default_timezone_set('Asia/Almaty');
@@ -157,6 +146,15 @@ function nicePrint($print){
     echo '<pre>' . print_r($print, TRUE) . '</pre>';
 }
 
+function generateRandomString($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
 
 
 ?>

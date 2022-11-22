@@ -3,126 +3,59 @@ require_once "lib.php";
 $db=new db();
 $date=datenow();
 
-if(isset($_POST['login'])){
-    $user=val($_POST['login']);
-    $mainQ=$db->query("SELECT users.login, users.name, users.fname, users.role, lesson2user.*,lessons.* FROM users LEFT JOIN lesson2user ON users.login=lesson2user.user LEFT JOIN lessons ON lesson2user.lessonid=lessons.id WHERE users.login=?",$user)->fetchAll();
+if(isset($_POST['objLevel'])){
+    $role=$_SESSION['role'];
 
+    if($role==="admin"){
 
-    echo"<table class='resp'>
-          <thead>
-            <tr>
-              <th scope=\"col\">Урок</th>
-              <th scope=\"col\">Дата</th>
+        $objName=val($_POST['objName']);
+        $objDescr=val($_POST['objDescr']);
+        $levelNow=(int)val($_POST['objLevel'])+1;
+        $objParent=val($_POST['objParent']);
+        $date=datenow();
 
-            </tr>
-          </thead>
-          <tbody>";
+//        Если будет прям много запросов могу загнать код в цикл while, чтобы обеспечить уникальность
+        $code=generateRandomString(5).rand(1,255);
 
-    foreach ($mainQ as $row){
-        $lesson=$row['lesson'];
-        $date=reformatDate($row['date']);
-
-        echo "
-            <tr>
-              <td data-label=\"Урок\">$lesson</td>
-              <td data-label=\"Дата\">$date</td>
-            </tr>";
-
-    }
-    echo"</tbody>
-            </table>";
-
-}
-
-elseif(isset($_POST['lesson'])){
-    $lessonid=val($_POST['lesson']);
-    $mainQ=$db->query("SELECT users.login, users.name, users.fname, users.role, lesson2user.*,lessons.* FROM users LEFT JOIN lesson2user ON users.login=lesson2user.user LEFT JOIN lessons ON lesson2user.lessonid=lessons.id WHERE lessons.id=?",$lessonid)->fetchAll();
-
-
-    echo"<table class='resp'>
-          <thead>
-            <tr>
-              <th scope=\"col\">Почта</th>
-              <th scope=\"col\">Имя</th>
-              <th scope=\"col\">Фамилия</th>
-              <th scope=\"col\">Дата</th>
-
-            </tr>
-          </thead>
-          <tbody>";
-
-    foreach ($mainQ as $row){
-        $email=$row['login'];
-        $name=$row['name'];
-        $fname=$row['fname'];
-        $date=reformatDate($row['date']);
-
-        echo "
-            <tr>
-              <td data-label=\"Почта\">$email</td>
-              <td data-label=\"Имя\">$name</td>
-              <td data-label=\"Фамилия\">$fname</td>
-              <td data-label=\"Дата\">$date</td>
-            </tr>";
-
-    }
-    echo"</tbody>
-            </table>";
-
-}
-
-else{
-
-    $checkU=$db->query("SELECT 1 FROM users")->numRows();
-
-    if($checkU>0){
-        echo"Уже добавляли пользователей<br><br>";
-    } else{
-
-        for ($i=0;$i<2000;$i++){
-            $db->query("INSERT INTO users(login,name,fname,role,date) VALUES (?,?,?,?,?)","user$i@email.com","Артур$i","Пирожков$i","student",$date);
-        }
-
-        for ($i=0;$i<4;$i++){
-            $db->query("INSERT INTO users(login,name,fname,role,date) VALUES (?,?,?,?,?)","admin$i@email.com","Сам$i","Самыч$i","admin",$date);
-        }
-
-        echo"Вставили админов и пользователей<br><br>";
-    }
-
-    $checkL=$db->query("SELECT 1 FROM lessons")->numRows();
-
-    if($checkL>0){
-        echo"Уже добавляли уроки<br><br>";
-    } else {
-        for ($i = 0; $i < 21; $i++) {
-            $db->query("INSERT INTO lessons(lesson) VALUES (?)", "УРОК_$i");
-        }
-        echo"Вставили уроки<br><br>";
-    }
-
-    $checkL2=$db->query("SELECT 1 FROM lesson2user")->numRows();
-
-    if($checkL2>0){
-        echo"Уже заканчивали уроки<br><br>";
-    } else{
-
-        $usersQ=$db->query("SELECT login FROM users")->fetchAll();
-
-        foreach ($usersQ as $row){
-            $rand=rand(1,20);
-
-            $usernow=$row['login'];
-
-            for($i=1;$i<$rand;$i++){
-                $db->query("INSERT INTO lesson2user(lessonid,user,date) VALUES(?,?,?)",$i,$usernow,$date);
-
+        if($db->query("INSERT INTO objects(name,descr,level,date,code,parent) VALUES(?,?,?,?,?,?)",$objName,$objDescr,$levelNow,$date,$code,$objParent)){
+            if($objParent!="root"){
+                $db->query("UPDATE objects SET haschild=? WHERE code=?","yes",$objParent);
             }
-            echo"Закончили уроки<br><br>";
+
+              header("location:/?success");
+        } else{
+            header("location:/?smthwrong");
         }
 
+    } else{
+        header("location:/?youshallnotpass");
     }
 }
 
+
+if(isset($_POST['deletemecode'])){
+    $code2delete=val($_POST['deletemecode']);
+
+    $checkQ=$db->query("SELECT haschild FROM objects WHERE code=?",$code2delete)->numRows();
+    if($checkQ>0){
+        $childQ=$db->query("SELECT haschild FROM objects WHERE code=?",$code2delete)->fetchArray();
+        $haschild=$childQ['haschild'];
+        if($_SESSION['role']==="admin"){
+            if($haschild==="no"){
+                $db->query("DELETE FROM objects WHERE code=?",$code2delete);
+                echo"delok";
+            } else{
+                $db->query("DELETE FROM objects WHERE code=?",$code2delete);
+                $db->query("DELETE FROM objects WHERE parent=?",$code2delete);
+                echo"delallok";
+            }
+
+
+        }
+    } else{
+        echo"notexists";
+    }
+
+}
 
 $db->close();

@@ -17,8 +17,8 @@ RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
 #   Input:  user/NAME/
 #   Output: user.php?id=NAME
 
-RewriteRule ^murmansk/?$ murmansk.php
-RewriteRule ^kurs/?$ kurs.php
+RewriteRule ^registration/?$ registration.php
+RewriteRule ^login/?$ login.php
 
 
 </IfModule>

@@ -1,25 +1,68 @@
-$(function () {
-    $(".clickme").on("click",function () {
+window.addEventListener('DOMContentLoaded', function() {
 
-        let login=$(this).data("login");
-        $.post("/app/script.php",{login:login}).done(function (data) {
-            let modalw = new bootstrap.Modal(document.getElementById('modallessons'));
+    let linksall=document.querySelectorAll(".addnewobjecta");
+    let linksalldel=document.querySelectorAll(".deleteobject");
 
-            $("#mbody").html(data);
+    for (let i = 0; i < linksall.length; i++) {
+        linksall[i].addEventListener('click', addNewObj, false);
+    }
 
-            modalw.show();
-        })
-    })
+    for (let i = 0; i < linksalldel.length; i++) {
+        linksalldel[i].addEventListener('click', deleteObj, false);
+    }
 
-    $(".clickmelesson").on("click",function () {
+    function addNewObj(){
+        let attrLevel = this.getAttribute("data-level");
+        let attrParent = this.getAttribute("data-code");
+        let objLevel=document.getElementById("objLevel");
+        let objParent=document.getElementById("objParent");
 
-        let lesson=$(this).data("lessonid");
-        console.log(lesson);
-        $.post("/app/script.php",{lesson:lesson}).done(function (data) {
-            let modalw = new bootstrap.Modal(document.getElementById('modallessons'));
-            $("#mbody").html(data);
+        objLevel.value=attrLevel;
+        objParent.value=attrParent;
 
-            modalw.show();
-        })
-    })
-})
+        let modalShow = new bootstrap.Modal(document.getElementById('modalobject'));
+
+        modalShow.show();
+
+    }
+
+    function deleteObj(){
+        let objName=this.getAttribute("data-objname");
+        let delObjCode=this.getAttribute("data-code");
+        if(confirm(`Уверены что хотите удалить объект ${objName} с кодом: ${delObjCode}?`)){
+
+            let http = new XMLHttpRequest();
+            let url = '/app/script.php';
+            let params = `deletemecode=${delObjCode}`;
+            http.open('POST', url, true);
+
+            http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+            http.onreadystatechange = function() {
+                if(http.readyState === 4 && http.status === 200) {
+                    let response=http.responseText;
+                    if(response.trim()==="delok") {
+                        alert("Успешно удалили");
+                        location.reload();
+                    }
+                    if(response.trim()==="delallok"){
+                        alert("Успешно удалили вместе с потомками");
+                        location.reload();
+                    }
+                    else{
+                        alert("Ошибка удаления"+response);
+                        return false;
+                    }
+                }
+            }
+            http.send(params);
+            console.log("удали меня полностью");
+
+        } else{
+            return false;
+        }
+
+    }
+
+
+});
