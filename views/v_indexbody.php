@@ -23,6 +23,14 @@
           elseif(isset($_REQUEST['delsuccess'])){
               echo"<p class='alert alert-success'>Успешно удалил Объект с кодом{$_REQUEST['delsuccess']}.</p>";
           }
+
+          elseif(isset($_REQUEST['successedit'])){
+              echo"<p class='alert alert-success'>Успешно редактировали Объект с кодом: {$_REQUEST['successedit']}.</p>";
+          }
+
+          elseif(isset($_REQUEST['failededit'])){
+              echo"<p class='alert alert-danger'>Внимание ошибка редактирования ОР-1</p>";
+          }
           ?>
 
       </div>
@@ -35,7 +43,7 @@
         function printMe($code){
             global $db;
 
-            $hasQ=$db->query("SELECT * FROM objects WHERE code=?",$code)->fetchArray();
+            $hasQ=$db->query("SELECT * FROM objects WHERE code=? AND status=?",$code,"ok")->fetchArray();
             $hasChildren=$hasQ['haschild'];
             $name=$hasQ['name'];
             $descr=$hasQ['descr'];
@@ -56,10 +64,10 @@
                 $bg="";
             }
             if($hasChildren==="no"){
-                echo"<p style='padding-left: {$padding}px; font-weight:$fweight;$bg'>{$addstring}Код: $code, Уровень:$level Название: $name, Описание: $descr, Дата создания: $date (<a href='#' class='link-success addnewobjecta' data-code='$code' data-level='$level'>Добавить потомка</a> ||| <a href='#' class='link-danger deleteobject' data-code='$code' data-objname='$name'>Удалить</a>)(ОТЕЦ: $parent)</p>";
+                echo"<p style='padding-left: {$padding}px; font-weight:$fweight;$bg'>{$addstring}Код: $code, Уровень:$level Название: <span id='idname{$code}'>$name</span>, Описание: <span id='iddescr{$code}'>$descr</span>, Дата создания: $date (<a href='#' class='link-success addnewobjecta' data-code='$code' data-level='$level'>Добавить потомка</a> ||| <a href='#' class='link-warning editobject' data-code='$code'>Редактировать</a> ||| <a href='#' class='link-danger deleteobject' data-code='$code' data-objname='$name'>Удалить</a>)(ОТЕЦ: $parent)</p>";
             } else{
-                echo"<p style='padding-left: {$padding}px; font-weight:$fweight;$bg' >{$addstring}Код: $code, Уровень:$level Название: $name, Описание: $descr, Дата создания: $date (<a href='#' class='link-success addnewobjecta' data-code='$code' data-level='$level'>Добавить потомка</a> ||| <a href='#' class='link-danger deleteobject' data-code='$code' data-objname='$name'>Удалить</a>) (ОТЕЦ: $parent)</p>";
-                $childrenQ=$db->query("SELECT * FROM objects WHERE parent=?",$code)->fetchAll();
+                echo"<p style='padding-left: {$padding}px; font-weight:$fweight;$bg' >{$addstring}Код: $code, Уровень:$level Название: <span id='idname{$code}'>$name</span>, Описание: <span id='iddescr{$code}'>$descr</span>, Дата создания: $date (<a href='#' class='link-success addnewobjecta' data-code='$code' data-level='$level'>Добавить потомка</a> ||| <a href='#' class='link-warning editobject' data-code='$code'>Редактировать</a> ||| <a href='#' class='link-danger deleteobject' data-code='$code' data-objname='$name'>Удалить</a>) (ОТЕЦ: $parent)</p>";
+                $childrenQ=$db->query("SELECT * FROM objects WHERE parent=? AND status=?",$code,"ok")->fetchAll();
                 foreach ($childrenQ as $rowC){
                     $childCode=$rowC['code'];
                     echo"<p>";
@@ -78,7 +86,7 @@
 
             echo"<h1>Дерево объектов</h1>";
 
-            $mainQ=$db->query("SELECT * FROM objects WHERE level=?",1)->fetchAll();
+            $mainQ=$db->query("SELECT * FROM objects WHERE level=? AND status=?",1,"ok")->fetchAll();
 
             echo"<div class='col-lg-12'>";
             foreach ($mainQ as $row){
@@ -101,7 +109,7 @@
 </main>
 
 
-<!-- Modal -->
+<!-- Modal new object-->
 <div class="modal fade" id="modalobject" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
@@ -125,3 +133,30 @@
         </div>
     </div>
 </div>
+<!-- Modal new object!!!-->
+
+<!-- Modal edit object-->
+<div class="modal fade" id="modaleditobject" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabele">Редактировать объект<span id="editmeobject"></span></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="mbodyedit">
+                <form action="/app/script.php" method="post">
+                    <input type="text" class="form-control" name="objNameEdit" id="objNameEdit">
+                    <input type="text" class="form-control mt-2" name="objDescrEdit" id="objDescrEdit">
+                    <input type="text" class="form-control mt-2" name="objCodeEditMe" id="objCodeEditMe" readonly>
+
+                    <button class="btn btn-success mt-2">Отправить</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal new object!!!-->

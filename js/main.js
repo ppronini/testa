@@ -2,6 +2,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
     let linksall=document.querySelectorAll(".addnewobjecta");
     let linksalldel=document.querySelectorAll(".deleteobject");
+    let linksalledit=document.querySelectorAll(".editobject");
 
     for (let i = 0; i < linksall.length; i++) {
         linksall[i].addEventListener('click', addNewObj, false);
@@ -9,6 +10,10 @@ window.addEventListener('DOMContentLoaded', function() {
 
     for (let i = 0; i < linksalldel.length; i++) {
         linksalldel[i].addEventListener('click', deleteObj, false);
+    }
+
+    for (let i = 0; i < linksalledit.length; i++) {
+        linksalledit[i].addEventListener('click', editObj, false);
     }
 
     function addNewObj(){
@@ -44,8 +49,9 @@ window.addEventListener('DOMContentLoaded', function() {
                     if(response.trim()==="delok") {
                         alert("Успешно удалили");
                         location.reload();
+
                     }
-                    if(response.trim()==="delallok"){
+                    else if(response.trim()==="delallok"){
                         alert("Успешно удалили вместе с потомками");
                         location.reload();
                     }
@@ -56,7 +62,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 }
             }
             http.send(params);
-            console.log("удали меня полностью");
+
 
         } else{
             return false;
@@ -64,5 +70,23 @@ window.addEventListener('DOMContentLoaded', function() {
 
     }
 
+    function editObj(){
+        let attrCode = this.getAttribute("data-code");
+        let currentName=document.getElementById(`idname${attrCode}`);
+        let currentDescr=document.getElementById(`iddescr${attrCode}`);
+        let objNameEdit=document.getElementById("objNameEdit");
+        let objDescrEdit=document.getElementById("objDescrEdit");
+        let objCode=document.getElementById("objCodeEditMe");
+        let header=document.getElementById("editmeobject");
+
+        objNameEdit.value=currentName.textContent;
+        objDescrEdit.value=currentDescr.textContent;
+        header.textContent=": "+attrCode;
+        objCode.value=attrCode;
+
+        let modalShow = new bootstrap.Modal(document.getElementById('modaleditobject'));
+        modalShow.show();
+
+    }
 
 });
