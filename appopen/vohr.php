@@ -113,7 +113,7 @@ if (isset($_POST['reg_form'])){
                 logme("vohr.txt","$logid- Входим на сайт","Прошел проверку на Роль и пароль: $email с ролью $role");
 
 
-                    header("location:/?success");
+                    header("location:/");
 
 
             }

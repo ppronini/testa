@@ -32,27 +32,33 @@ if(isset($_POST['objLevel'])){
     }
 }
 
+function deleteObject($code){
+    global $db;
+    $childQ=$db->query("SELECT haschild FROM objects WHERE code=?",$code)->fetchArray();
+    $haschild=$childQ['haschild'];
+    $date=datenow();
+    if($_SESSION['role']==="admin"){
+        if($haschild==="no"){
+            $db->query("UPDATE objects SET status=?,statusdate=?,statusby=? WHERE code=?","deleted",$date,$_SESSION['email'],$code);
+
+        } else{
+            $db->query("UPDATE objects SET status=?,statusdate=?,statusby=?,haschild=? WHERE code=?","deleted",$date,$_SESSION['email'],"no",$code);
+            $childrenQ=$db->query("SELECT * FROM objects WHERE parent=?",$code)->fetchAll();
+
+            foreach ($childrenQ as $rowch){
+                $codeCh=$rowch['code'];
+                deleteObject($codeCh);
+            }
+        }
+    }
+}
 
 if(isset($_POST['deletemecode'])){
     $code2delete=val($_POST['deletemecode']);
-
     $checkQ=$db->query("SELECT haschild FROM objects WHERE code=?",$code2delete)->numRows();
     if($checkQ>0){
-        $childQ=$db->query("SELECT haschild FROM objects WHERE code=?",$code2delete)->fetchArray();
-        $haschild=$childQ['haschild'];
-        $date=datenow();
-        if($_SESSION['role']==="admin"){
-            if($haschild==="no"){
-                $db->query("UPDATE objects SET status=?,statusdate=?,statusby=? WHERE code=?","deleted",$date,$_SESSION['email'],$code2delete);
-                echo"delok";
-            } else{
-                $db->query("UPDATE objects SET status=?,statusdate=?,statusby=?,haschild=? WHERE code=?","deleted",$date,$_SESSION['email'],"no",$code2delete);
-                $db->query("UPDATE objects SET status=?,statusdate=?,statusby=?,haschild=? WHERE parent=?","deleted",$date,$_SESSION['email'],"no",$code2delete);
-                echo"delallok";
-            }
-
-
-        }
+        deleteObject($code2delete);
+        echo"delok";
     } else{
         echo"notexists";
     }
@@ -81,6 +87,19 @@ if(isset($_POST['objCodeEditMe'])){
         header("location:/?failededit");
     }
 
+}
+
+if(isset($_POST['showmedescrobject'])){
+    $codeshow=val($_POST['showmedescrobject']);
+
+    $checkQ=$db->query("SELECT 1 FROM objects WHERE code=? AND status=?",$codeshow,"ok")->numRows();
+    if($checkQ>0){
+        $showQ=$db->query("SELECT descr FROM objects WHERE code=?",$codeshow)->fetchArray();
+        $descr=$showQ['descr'];
+        echo"$descr";
+    } else{
+        echo "cantshow";
+    }
 }
 
 $db->close();

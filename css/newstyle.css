@@ -73,3 +73,16 @@ table.resp th {
     }
 }
 /*Responsive table end*/
+
+.b{
+    font-weight: bold;
+}
+
+.hidden{
+    display: none;
+}
+
+.treediv{
+    padding:5px;
+    margin: 5px;
+}
